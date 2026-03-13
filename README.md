@@ -1,68 +1,66 @@
-# bird_diversity
+**Ultimate Goal: Prepare a thermal state
+$$e^{- \beta H} / Z$$
+approximately for a large system.**
 
-An example repo for a bird diversity experiment.
+## Schwinger Hamiltonian
+The following function creates the Schwinger model Hamiltonian as a SparsePauliOp.
+$$H = H_{kin} + H_{mass} + H_{elec}$$
+where
+$$H_{kin} \equiv \frac{1}{2a} \sum_{i = 0}^{L - 2} (\sigma_i^{+} \sigma_{i+1}^{-} + \sigma_{i+1}^{+} \sigma_i^{-})$$
+$$H_{mass} \equiv m \sum_{i=0}^{L-1} O_i, O_i \equiv (-1)^i \frac{\sigma_i^z + 1}{2a}$$
+$$H_{elec} \equiv \frac{a}{2} \sum_{i=0}^L E_i^2, E_i \equiv e(l_0 + \frac{1}{2} \sum_{j=0}^{i-1}(\sigma_j^z + (-1)^j)$$
 
-This example is based on a classic ecology paper that uses Shannon Entropy
-(also called Shannon Index in ecology) as a measure of diversity of bird and
-plant species and of foliage cover at different heights to address the question:
-"What is it about the environment which controls the bird species diversity?"
+a: lattice spacing
 
-The original paper is:
-MacArthur, R.H. and MacArthur, J.W. (1961), On Bird Species Diversity. Ecology, 42: 594-598. https://doi.org/10.2307/1932254
+n: index of lattice position $x = na$
 
-In our example, we are interested in replicating this experiment, so we have
-gathered data from a number of test sites across the US.
+L: number of qubits
 
-## git hash based version number
+$\sigma^{\pm} = (\sigma_x \pm i\sigma_y)/2)$: creation/annihilation operators
 
-This package uses setuptools_scm to set the version number of the package equal
-based on the git hash. To get the version number (which contains the hash) use:
-```
-import bird_diversity
-version = bird_diversity.__version__
-```
+We set $l_0 = 0$.
 
-Then the `version` variable will contain a version string, something like:
-```
-'0.1.dev2+g81f125f92.d20260204'
-```
-The part after the `+g` is the git hash (N.B. the "g" is not part of the hash).
-If there is anything after the hash (e.g. `.d20260204` in this example) it means
-that there are local changes that are not included in a commit.
-There will be no `+g` if you are on a tagged version because the tag fully
-specifies the commit. 
+### Environmental Correlator D(x)
+Regarding the environmental correlator, $x_1 = n_1 a$ and $x_2 = n_2 a$ are discrete spatial coordinates.
 
+For short range correlations, use a delta function:
+$$D_{\delta}(x) = D_0 \delta_{0x}.$$
 
-## testing
+For intermediate-range correlations, use a Gaussian:
+$$D_G(x) = D_0 \exp(-\frac{x^2}{2\sigma^2}) \equiv D_0 G(x, \sigma).$$
 
-To run tests, you must first create a conda environment with the required
-packages Use:
-`conda env create -f environment.yaml`
+For long-range correlations, use a constant function:
+$$D_C(x) = D_0.$$
 
-Next install the bird_diversity package with pip. Use:
-`pip install --no-deps -e .`
+### Now building the Liouvillian superoperator
+In building the Liouvillian superoperator, the following ways of rewriting the Lindblad equation are used:
 
-(The option `--no-deps` tells pip not to install the dependencies, something we want to do because we manage our dependencies with conda, not pip. The option `-e` makes this an editable install so that if you change you don't have to reinstall to run the modified code.)
+For the Hamiltonian part,
+$$-i[H, \rho] \rightarrow -i (I \otimes H - H^T \otimes I) vec(\rho)$$
 
-You can run the tests in the `tests` directory with:
-`pytest`
+For the dissipator part,
+$$a^2 \sum_{x_1, x_2} D(x_1 - x_2) [(L^{\dagger}(x_1))^T \otimes L(x_2) - \frac{1}{2}(I \otimes M) - \frac{1}{2} (M^T \otimes I)] vec(\rho)$$ where $M = L^{\dagger}(x_1)L(x_2).$
 
-A few things to note:
-1. It is important to have an installable package, with an `__init__.py` file in the package directory and a `pyproject.toml`.
-2. You must install the package to be able to run the tests.
-3. Both the test files and the test functions must start with `test_` for pytest to find them.
-4. In the test files do not use relative imports.
+We can do this thanks to the following identity:
+$$vec(A \rho B) = (B^T \otimes A) vec(\rho).$$
 
-## continuous integration
+This way, the Lindblad equation is a linear ODE:
+$$\frac{d}{dt}|\rho> = \mathcal{L}|\rho>$$
 
-We are using GitHub actions for our continuous integration. GitHub actions looks
-for workflow files, which are yaml files that specify what to run on the GitHub
-action runner. The workflow files **must** be placed in the `.github/workflows/`
-folder and must have a `.yaml` or `.yml` extension for GitHub actions to find them.
+### Checking J Operator Construction
+Block (j, 0) in the aux basis should equal $L_j$, and block (0, j) should equal $L^{\dagger}_j$ with all other blocks zero.
 
-In our action, we first set up our conda environment using the `environment.yaml`
-file in our repo and then call `pytest` to run our tests. We also use the pytest-cov
-plugin to report our test coverage.
+The block structure should match:
+$$J[j,0] = L_j$$
+$$J[0,j] = L^{\dagger}_j$$
 
-Note:
-GitHub actions are disabled by default on forks.
+## Measuring the Energy Density of a Single Qubit
+$$H = \sum_n h_n$$
+$$\epsilon_n \equiv \langle h_n \rangle_t = Tr(h_n \rho(t))$$
+
+In our case, our Hamiltonian is a sum of Pauli strings. We can define $h_n$ by assigning each Pauli term's energy to sites:
+ - If a term acts on k qubits, each qubit gets $1/k$ of its coefficient.
+ - 1-qubit terms belong fully to a qubit.
+ - Identity terms are just a global shift; we can ignore them.
+
+ 

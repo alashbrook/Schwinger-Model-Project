@@ -1,0 +1,9 @@
+# Pinned to what the notebook was developed against, so the cluster computes the
+# same numbers.  thermal_hpc.py needs only these three.
+numpy==2.4.4
+scipy==1.17.1
+qiskit==2.3.1
+
+# Optional, only for --backend mkl / --backend gpu (install by hand; see HYAK_README):
+#   sparse-dot-mkl==0.9.6
+#   cupy-cuda12x
